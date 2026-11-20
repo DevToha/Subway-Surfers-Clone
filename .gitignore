@@ -1,0 +1,11 @@
+# deps
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# vercel
+.vercel
+
+# os
+.DS_Store
+Thumbs.db

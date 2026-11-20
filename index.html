@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#07070f" />
+<meta name="description" content="METRO RUSH 3D — a neon-soaked endless runner. Dodge trains, grab coins, chase the high score." />
+<title>METRO RUSH 3D — Endless Runner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1020'/%3E%3Cpath d='M15 47V19l8.5 13L32 19v28' fill='none' stroke='%2325e5ff' stroke-width='6' stroke-linejoin='round' stroke-linecap='round'/%3E%3Cpath d='M41 47V19l8 28' fill='none' stroke='%23ff2e88' stroke-width='6' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" /></noscript>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="game-canvas" aria-label="Metro Rush 3D game canvas"></canvas>
+
+  <!-- atmosphere overlays -->
+  <div class="fx-vignette" aria-hidden="true"></div>
+  <div class="fx-scan" aria-hidden="true"></div>
+  <div id="speedlines" class="fx-speedlines" aria-hidden="true"></div>
+  <div id="flash" class="fx-flash" aria-hidden="true"></div>
+  <div id="danger" class="fx-danger" aria-hidden="true"></div>
+  <div id="caught" class="caught" aria-hidden="true"><span>CAUGHT!</span></div>
+
+  <!-- ================= HUD ================= -->
+  <div id="hud" class="hud is-hidden">
+    <div class="hud__top">
+      <div class="hud__cluster hud__cluster--left">
+        <div class="stat">
+          <span class="stat__label">SCORE</span>
+          <span class="stat__value stat__value--score" id="hud-score">0</span>
+        </div>
+        <div class="chip">
+          <span class="coin-icon" aria-hidden="true"></span>
+          <span class="chip__value" id="hud-coins">0</span>
+        </div>
+      </div>
+      <div class="hud__cluster hud__cluster--right">
+        <div class="chip chip--dist">
+          <svg viewBox="0 0 24 24" class="chip__ico" aria-hidden="true"><path d="M12 3v18M12 3l-4 4M12 3l4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="chip__value" id="hud-dist">0 m</span>
+        </div>
+        <button class="icon-btn" id="btn-sound" aria-label="Toggle sound" title="Sound (M)">
+          <svg class="ico ico--on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg class="ico ico--off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <button class="icon-btn" id="btn-pause" aria-label="Pause game" title="Pause (P)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="chase" id="hud-chase">
+      <span class="chase__badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2.6l2.4 1.7 2.9-.2.9 2.8 2.2 1.9-1.2 2.7.4 2.9-2.7 1.1-1.6 2.4-2.9-.6-2.4 1.7-2.2-1.9-2.9-.3-.8-2.8-2.1-2 1.3-2.6-.3-2.9 2.7-1.2L7.2 3.1l2.9.5z" fill="currentColor"/></svg>
+      </span>
+      <span class="chase__meta">
+        <span class="chase__label">CHASE</span>
+        <span class="chase__bar"><i id="hud-chase-fill"></i></span>
+      </span>
+    </div>
+
+    <div class="hud__powerups" id="hud-powerups"></div>
+
+    <div class="hud__footer">
+      <span class="hud__best">BEST <b id="hud-best">0</b></span>
+      <span class="hud__mult" id="hud-mult"></span>
+    </div>
+
+    <div class="touch-hint" id="touch-hint">
+      <span class="touch-hint__item"><i class="swipe swipe--l"></i>SWIPE</span>
+      <span class="touch-hint__item"><i class="swipe swipe--u"></i>JUMP</span>
+      <span class="touch-hint__item"><i class="swipe swipe--d"></i>SLIDE</span>
+    </div>
+  </div>
+
+  <!-- ================= MAIN MENU ================= -->
+  <div id="screen-menu" class="screen screen--menu">
+    <div class="menu__scrim"></div>
+    <div class="menu__inner">
+      <header class="brand">
+        <div class="brand__tag"><span class="brand__dot"></span> ENDLESS RUNNER</div>
+        <h1 class="brand__title">
+          <span class="brand__word brand__word--1">METRO</span>
+          <span class="brand__word brand__word--2">RUSH</span>
+          <span class="brand__3d">3D</span>
+        </h1>
+        <p class="brand__sub">Outrun the express. Ride the rails. Own the city.</p>
+      </header>
+
+      <div class="menu__actions">
+        <button id="btn-play" class="btn btn--primary btn--play">
+          <span class="btn__glow"></span>
+          <span class="btn__label">PLAY</span>
+          <svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="menu__row">
+          <button id="btn-howto" class="btn btn--ghost">HOW TO PLAY</button>
+          <button id="btn-sound2" class="btn btn--ghost">
+            <svg class="ico ico--on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <svg class="ico ico--off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span id="sound-label">SOUND ON</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="menu__stats">
+        <div class="menu__stat">
+          <span class="menu__stat-label">BEST SCORE</span>
+          <strong id="menu-best">0</strong>
+        </div>
+        <div class="menu__stat">
+          <span class="menu__stat-label">COINS BANKED</span>
+          <strong id="menu-coins">0</strong>
+        </div>
+      </div>
+
+      <div class="menu__hint">
+        <kbd>A</kbd><kbd>D</kbd> / <kbd>←</kbd><kbd>→</kbd> SWITCH LANE &nbsp;·&nbsp; <kbd>SPACE</kbd> JUMP &nbsp;·&nbsp; <kbd>S</kbd> SLIDE &nbsp;·&nbsp; <kbd>P</kbd> PAUSE
+      </div>
+    </div>
+    <div class="menu__credit">ORIGINAL GAME · PROCEDURAL THREE.JS BUILD</div>
+  </div>
+
+  <!-- ================= HOW TO PLAY ================= -->
+  <div id="screen-howto" class="screen screen--modal is-hidden">
+    <div class="modal">
+      <button class="modal__close" id="btn-howto-close" aria-label="Close">&times;</button>
+      <h2 class="modal__title">HOW TO PLAY</h2>
+      <div class="modal__grid">
+        <div class="keycard">
+          <div class="keycard__keys"><kbd>A</kbd><kbd>D</kbd></div>
+          <div class="keycard__body"><b>SWITCH LANE</b><span>Tap ← → or swipe sideways</span></div>
+        </div>
+        <div class="keycard">
+          <div class="keycard__keys"><kbd>SPACE</kbd></div>
+          <div class="keycard__body"><b>JUMP</b><span>Clear low barriers &amp; hurdles</span></div>
+        </div>
+        <div class="keycard">
+          <div class="keycard__keys"><kbd>S</kbd></div>
+          <div class="keycard__body"><b>SLIDE</b><span>Duck under hanging signs</span></div>
+        </div>
+        <div class="keycard">
+          <div class="keycard__keys"><kbd>P</kbd></div>
+          <div class="keycard__body"><b>PAUSE</b><span>Take a breath, keep the run</span></div>
+        </div>
+      </div>
+      <ul class="legend">
+        <li><i class="dot dot--gold"></i><b>Coins</b> — +10 score each, chain them for combos.</li>
+        <li><i class="dot dot--mag"></i><b>Magnet</b> — pulls every coin on the tracks to you.</li>
+        <li><i class="dot dot--cyan"></i><b>Turbo</b> — smash through anything at full speed.</li>
+        <li><i class="dot dot--red"></i><b>Trains &amp; blocks</b> — never touch them. Switch lanes early.</li>
+      </ul>
+      <p class="modal__note">Tip: the faster you run, the more the score climbs. Survive long enough and the city turns into a blur.</p>
+    </div>
+  </div>
+
+  <!-- ================= PAUSE ================= -->
+  <div id="screen-pause" class="screen screen--modal is-hidden">
+    <div class="modal modal--narrow">
+      <h2 class="modal__title">PAUSED</h2>
+      <p class="modal__sub">The rails can wait.</p>
+      <div class="modal__actions">
+        <button id="btn-resume" class="btn btn--primary">RESUME</button>
+        <button id="btn-restart-pause" class="btn btn--ghost">RESTART RUN</button>
+        <button id="btn-menu-pause" class="btn btn--ghost">MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GAME OVER ================= -->
+  <div id="screen-over" class="screen screen--over is-hidden">
+    <div class="over__card">
+      <div class="over__badge is-hidden" id="over-newbest">NEW RECORD</div>
+      <h2 class="over__title">RUN ENDED</h2>
+      <p class="over__sub" id="over-cause">You met a train. It did not move.</p>
+
+      <div class="over__score">
+        <span class="over__score-label">FINAL SCORE</span>
+        <strong id="over-score">0</strong>
+      </div>
+
+      <div class="over__grid">
+        <div><span>DISTANCE</span><b id="over-dist">0 m</b></div>
+        <div><span>COINS</span><b id="over-coins">0</b></div>
+        <div><span>BEST</span><b id="over-best">0</b></div>
+      </div>
+
+      <div class="over__actions">
+        <button id="btn-restart" class="btn btn--primary btn--play"><span class="btn__label">RUN AGAIN</span></button>
+        <button id="btn-menu" class="btn btn--ghost">MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= BOOT ================= -->
+  <div id="boot" class="boot">
+    <div class="boot__logo">METRO<span>RUSH</span></div>
+    <div class="boot__bar"><i id="boot-fill"></i></div>
+    <div class="boot__msg" id="boot-msg">Laying track…</div>
+  </div>
+
+  <div id="go-flash" class="go-flash" aria-hidden="true">GO!</div>
+</div>
+
+<noscript>
+  <div style="position:fixed;inset:0;display:grid;place-items:center;background:#07070f;color:#fff;font-family:sans-serif;text-align:center;padding:24px;z-index:999">
+    METRO RUSH 3D needs JavaScript and WebGL enabled to run.
+  </div>
+</noscript>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/player.js"></script>
+<script src="js/chasers.js"></script>
+<script src="js/world.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "metro-rush-3d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "METRO RUSH 3D — a neon-soaked endless runner built with Three.js. No build step.",
+  "scripts": {
+    "dev": "npx --yes serve -l 5173 .",
+    "dev:py": "python3 -m http.server 5173"
+  },
+  "keywords": ["threejs", "webgl", "endless-runner", "game"],
+  "license": "MIT"
+}
